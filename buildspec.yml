@@ -1,0 +1,74 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 18
+    commands:
+      - echo "📦 Installing yarn..."
+      - npm install -g yarn
+      - echo "📦 Installing dependencies with yarn..."
+      - yarn install
+
+  pre_build:
+    commands:
+      - |
+        if [ "$CODEBUILD_WEBHOOK_HEAD_REF" != "" ]; then
+          BRANCH=$(echo $CODEBUILD_WEBHOOK_HEAD_REF | sed 's|refs/heads/||')
+        elif [ "$BRANCH" != "" ]; then
+          BRANCH=$BRANCH
+        else
+          echo "❌ Could not detect branch"
+          exit 1
+        fi
+        echo "🪄 Branch: $BRANCH"
+        export BRANCH=$BRANCH
+
+  build:
+    commands:
+      - yarn build
+
+  post_build:
+    commands:
+      - |
+        bash -c '
+        if [ "$BRANCH" = "development" ]; then
+          S3_BUCKET=emed-partner-react-native-dev
+          CF_DISTS=("E2VEASTGL3BUYO")
+        elif [ "$BRANCH" = "qa" ]; then
+          S3_BUCKET=emed-partner-react-native-qa
+          CF_DISTS=()
+        elif [ "$BRANCH" = "staging" ]; then
+          S3_BUCKET=emed-partner-react-native-stage
+          CF_DISTS=()
+        elif [ "$BRANCH" = "main" ]; then
+          S3_BUCKET=emed-partner-react-native-prod
+          CF_DISTS=()
+        else
+          echo "❌ Unsupported branch: $BRANCH"
+          exit 1
+        fi
+
+        if [ ! -d "dist" ]; then
+          echo "❌ dist folder does not exist"
+          exit 1
+        fi
+
+        echo "📤 Syncing to S3..."
+        aws s3 sync ./dist s3://$S3_BUCKET --delete --cache-control "no-cache, no-store, must-revalidate"
+
+        for dist in "${CF_DISTS[@]}"; do
+          if [ -n "$dist" ]; then
+            aws cloudfront create-invalidation --distribution-id "$dist" --paths "/index.html"
+          fi
+        done
+        '
+
+artifacts:
+  base-directory: dist
+  files:
+    - '**/*'
+
+cache:
+  paths:
+    - node_modules/

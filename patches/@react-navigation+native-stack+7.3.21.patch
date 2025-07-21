@@ -1,0 +1,26 @@
+diff --git a/node_modules/@react-navigation/native-stack/lib/module/index.js b/node_modules/@react-navigation/native-stack/lib/module/index.js
+index 2782b4c..a008f30 100644
+--- a/node_modules/@react-navigation/native-stack/lib/module/index.js
++++ b/node_modules/@react-navigation/native-stack/lib/module/index.js
+@@ -8,7 +8,7 @@ export { createNativeStackNavigator } from "./navigators/createNativeStackNaviga
+ /**
+  * Views
+  */
+-export { NativeStackView } from './views/NativeStackView';
++export { NativeStackView } from './views/NativeStackView.js';
+ 
+ /**
+  * Hooks
+diff --git a/node_modules/@react-navigation/native-stack/lib/module/navigators/createNativeStackNavigator.js b/node_modules/@react-navigation/native-stack/lib/module/navigators/createNativeStackNavigator.js
+index 294bbfa..eed8811 100644
+--- a/node_modules/@react-navigation/native-stack/lib/module/navigators/createNativeStackNavigator.js
++++ b/node_modules/@react-navigation/native-stack/lib/module/navigators/createNativeStackNavigator.js
+@@ -2,7 +2,7 @@
+ 
+ import { createNavigatorFactory, StackActions, StackRouter, useNavigationBuilder } from '@react-navigation/native';
+ import * as React from 'react';
+-import { NativeStackView } from '../views/NativeStackView';
++import { NativeStackView } from '../views/NativeStackView.js';
+ import { jsx as _jsx } from "react/jsx-runtime";
+ function NativeStackNavigator({
+   id,
